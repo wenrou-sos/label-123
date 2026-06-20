@@ -1,0 +1,134 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  color: #5C4A4A;
+  background-color: #FFF9F5;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@layer base {
+  html, body, #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  body {
+    background: linear-gradient(180deg, #FFF9F5 0%, #FFF1E8 100%);
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-gradient-to-r from-rose-500 to-rose-600 text-white px-6 py-3 rounded-full font-medium
+           shadow-soft hover:shadow-lg active:scale-95 transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply bg-rose-100 text-rose-600 px-6 py-3 rounded-full font-medium
+           hover:bg-rose-200 active:scale-95 transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-rose-300 focus:ring-offset-2;
+  }
+
+  .btn-ghost {
+    @apply text-warm-500 px-4 py-2 rounded-full font-medium
+           hover:bg-warm-50 active:scale-95 transition-all duration-200;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-card p-5 transition-all duration-300
+           hover:shadow-card-hover;
+  }
+
+  .card-gradient {
+    @apply bg-gradient-to-br from-white to-rose-50 rounded-2xl shadow-card p-5
+           transition-all duration-300 hover:shadow-card-hover;
+  }
+
+  .input-base {
+    @apply w-full px-4 py-3 rounded-2xl border-2 border-warm-100 bg-ivory-50
+           text-warm-600 placeholder-warm-400
+           focus:outline-none focus:border-rose-400 focus:bg-white
+           transition-all duration-200;
+  }
+
+  .label-text {
+    @apply text-sm font-medium text-warm-500 mb-2 block;
+  }
+
+  .stat-number {
+    @apply font-serif font-bold text-transparent bg-clip-text
+           bg-gradient-to-br from-rose-500 to-rose-700;
+  }
+
+  .heatmap-cell {
+    @apply rounded-md cursor-pointer transition-all duration-200
+           hover:scale-125 hover:z-10 active:scale-110;
+  }
+
+  .heatmap-cell-empty {
+    @apply bg-heat-0 hover:bg-heat-1;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .stagger-animation > * {
+    opacity: 0;
+    animation: fadeIn 0.4s ease-out forwards;
+  }
+  .stagger-animation > *:nth-child(1) { animation-delay: 0.02s; }
+  .stagger-animation > *:nth-child(2) { animation-delay: 0.04s; }
+  .stagger-animation > *:nth-child(3) { animation-delay: 0.06s; }
+  .stagger-animation > *:nth-child(4) { animation-delay: 0.08s; }
+  .stagger-animation > *:nth-child(5) { animation-delay: 0.10s; }
+  .stagger-animation > *:nth-child(6) { animation-delay: 0.12s; }
+  .stagger-animation > *:nth-child(7) { animation-delay: 0.14s; }
+  .stagger-animation > *:nth-child(8) { animation-delay: 0.16s; }
+  .stagger-animation > *:nth-child(9) { animation-delay: 0.18s; }
+  .stagger-animation > *:nth-child(10) { animation-delay: 0.20s; }
+  .stagger-animation > *:nth-child(11) { animation-delay: 0.22s; }
+  .stagger-animation > *:nth-child(12) { animation-delay: 0.24s; }
+  .stagger-animation > *:nth-child(13) { animation-delay: 0.26s; }
+  .stagger-animation > *:nth-child(14) { animation-delay: 0.28s; }
+  .stagger-animation > *:nth-child(15) { animation-delay: 0.30s; }
+  .stagger-animation > *:nth-child(16) { animation-delay: 0.32s; }
+  .stagger-animation > *:nth-child(17) { animation-delay: 0.34s; }
+  .stagger-animation > *:nth-child(18) { animation-delay: 0.36s; }
+  .stagger-animation > *:nth-child(19) { animation-delay: 0.38s; }
+  .stagger-animation > *:nth-child(20) { animation-delay: 0.40s; }
+  .stagger-animation > *:nth-child(n+21) { animation-delay: 0.42s; }
+}

@@ -1,0 +1,78 @@
+export interface DiaryRecord {
+  id: string;
+  date: string;
+  rating: number;
+  content: string;
+  tags: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ExpectationSettings {
+  minTimesPerWeek: number;
+  maxTimesPerWeek: number;
+  reminderEnabled: boolean;
+}
+
+export interface MonthlyStats {
+  year: number;
+  month: number;
+  totalCount: number;
+  avgRating: number;
+  maxStreak: number;
+  compareToLastMonth: {
+    countChange: 'up' | 'down' | 'same';
+    countChangePercent: number;
+    ratingChange: 'up' | 'down' | 'same';
+  };
+}
+
+export interface YearlyStats {
+  year: number;
+  totalCount: number;
+  avgMonthlyCount: number;
+  highestMonth: { month: number; count: number };
+  lowestMonth: { month: number; count: number };
+  compareToLastYear: {
+    direction: 'up' | 'down' | 'same';
+    changePercent: number;
+    lastYearCount: number;
+  };
+  monthlyBreakdown: { month: number; count: number; avgRating: number }[];
+}
+
+export interface HeatmapCellData {
+  date: string;
+  dateObj: Date;
+  rating: number;
+  level: 0 | 1 | 2 | 3 | 4 | 5;
+  hasRecord: boolean;
+}
+
+export interface MonthHeatmapData {
+  year: number;
+  month: number;
+  monthLabel: string;
+  cells: (HeatmapCellData | null)[];
+}
+
+export interface AppState {
+  records: DiaryRecord[];
+  settings: ExpectationSettings;
+  selectedDate: string | null;
+  isDetailModalOpen: boolean;
+  isSettingPanelOpen: boolean;
+  showReminder: boolean;
+  setRecords: (records: DiaryRecord[]) => void;
+  addRecord: (record: Omit<DiaryRecord, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  updateRecord: (id: string, data: Partial<Omit<DiaryRecord, 'id' | 'createdAt'>>) => void;
+  deleteRecord: (id: string) => void;
+  setSettings: (settings: Partial<ExpectationSettings>) => void;
+  selectDate: (date: string | null) => void;
+  openDetailModal: (date?: string) => void;
+  closeDetailModal: () => void;
+  openSettingPanel: () => void;
+  closeSettingPanel: () => void;
+  dismissReminder: () => void;
+  checkAndUpdateReminder: () => void;
+}
