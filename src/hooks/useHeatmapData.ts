@@ -25,13 +25,15 @@ export const useHeatmapData = () => {
 
         const record = getRecordsByDate(records, day.dateStr);
         const rating = record?.rating ?? 0;
+        const hasRecord = !!record;
+        const rawLevel = getRatingHeatLevel(rating);
 
         return {
           date: day.dateStr,
           dateObj: day.date,
           rating,
-          level: getRatingHeatLevel(rating),
-          hasRecord: !!record,
+          level: (rawLevel === 0 && hasRecord ? 1 : rawLevel) as 0 | 1 | 2 | 3 | 4 | 5,
+          hasRecord,
         };
       });
 

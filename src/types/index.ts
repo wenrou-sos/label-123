@@ -63,6 +63,7 @@ export interface AppState {
   isDetailModalOpen: boolean;
   isSettingPanelOpen: boolean;
   showReminder: boolean;
+  reminderDismissed: boolean;
   setRecords: (records: DiaryRecord[]) => void;
   addRecord: (record: Omit<DiaryRecord, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateRecord: (id: string, data: Partial<Omit<DiaryRecord, 'id' | 'createdAt'>>) => void;

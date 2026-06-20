@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AppState, DiaryRecord, ExpectationSettings } from '../types';
 import {
-  generateMockRecords,
   generateUUID,
   checkExpectationDeviation,
 } from '../utils/statsUtils';
@@ -14,18 +13,16 @@ const DEFAULT_SETTINGS: ExpectationSettings = {
   reminderEnabled: true,
 };
 
-const initialRecords = generateMockRecords();
-const initialShouldShowReminder = checkExpectationDeviation(initialRecords, DEFAULT_SETTINGS);
-
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      records: initialRecords,
+      records: [],
       settings: DEFAULT_SETTINGS,
       selectedDate: null,
       isDetailModalOpen: false,
       isSettingPanelOpen: false,
-      showReminder: initialShouldShowReminder,
+      showReminder: false,
+      reminderDismissed: false,
 
       setRecords: (records: DiaryRecord[]) => {
         set({ records });
@@ -69,7 +66,10 @@ export const useAppStore = create<AppState>()(
       },
 
       setSettings: (settings) => {
-        set((state) => ({ settings: { ...state.settings, ...settings } }));
+        set((state) => ({
+          settings: { ...state.settings, ...settings },
+          reminderDismissed: false,
+        }));
         get().checkAndUpdateReminder();
       },
 
@@ -95,21 +95,37 @@ export const useAppStore = create<AppState>()(
       },
 
       dismissReminder: () => {
-        set({ showReminder: false });
+        set({ showReminder: false, reminderDismissed: true });
       },
 
       checkAndUpdateReminder: () => {
-        const { records, settings } = get();
-        const shouldShow = checkExpectationDeviation(records, settings);
-        set({ showReminder: shouldShow });
+        const { records, settings, reminderDismissed } = get();
+        const isDeviating = checkExpectationDeviation(records, settings);
+        if (!isDeviating) {
+          set({ showReminder: false, reminderDismissed: false });
+        } else if (!reminderDismissed) {
+          set({ showReminder: true });
+        }
       },
     }),
     {
       name: 'private-diary-storage',
+      version: 2,
       partialize: (state) => ({
         records: state.records,
         settings: state.settings,
       }),
+      migrate: (persistedState: unknown) => {
+        const state = (persistedState ?? {}) as {
+          records?: DiaryRecord[];
+          settings?: ExpectationSettings;
+        };
+        const records = state.records ?? [];
+        return {
+          ...state,
+          records: records.filter((r) => !r.id?.startsWith('mock-')),
+        };
+      },
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.checkAndUpdateReminder();

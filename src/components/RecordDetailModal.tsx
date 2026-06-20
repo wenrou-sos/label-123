@@ -60,7 +60,7 @@ export const RecordDetailModal: React.FC = () => {
 
     const data = {
       date: selectedDate,
-      rating: rating || 3,
+      rating,
       content: content.trim(),
       tags,
     };

@@ -6,6 +6,7 @@ import {
   prevMonth,
   parseDate,
   getLast28Days,
+  formatDate,
 } from './dateUtils';
 import { getYear, getMonth } from 'date-fns';
 
@@ -58,7 +59,7 @@ export const calcMaxStreak = (records: DiaryRecord[], year: number, month: numbe
   let maxStreak = 0;
 
   for (const day of monthDays) {
-    const dateStr = day.toISOString().split('T')[0];
+    const dateStr = formatDate(day);
     if (dateSet.has(dateStr)) {
       currentStreak++;
       maxStreak = Math.max(maxStreak, currentStreak);
@@ -161,7 +162,7 @@ export const calcYearlyStats = (records: DiaryRecord[], year: number): YearlySta
 
 export const calcRecent4WeeksCount = (records: DiaryRecord[]): number => {
   const last28Days = getLast28Days();
-  const dateSet = new Set(last28Days.map((d) => d.toISOString().split('T')[0]));
+  const dateSet = new Set(last28Days.map((d) => formatDate(d)));
   return records.filter((r) => dateSet.has(r.date)).length;
 };
 
@@ -188,62 +189,6 @@ export const getRatingHeatLevel = (rating: number): 0 | 1 | 2 | 3 | 4 | 5 => {
   if (rating <= 3) return 3;
   if (rating <= 4) return 4;
   return 5;
-};
-
-export const generateMockRecords = (): DiaryRecord[] => {
-  const records: DiaryRecord[] = [];
-  const today = new Date();
-  const tags = ['日常', '浪漫', '旅行', '纪念日', '美食', '电影', '散步', '惊喜'];
-  const contents = [
-    '今天一起看了日落，好美',
-    '一起做了晚饭，味道还不错',
-    '散步的时候聊了很多',
-    '看了一部很棒的电影',
-    '收到了小惊喜，开心',
-    '周末一起去了公园',
-    '纪念我们在一起的日子',
-    '分享了很多有趣的事情',
-    '一起尝试了新餐厅',
-    '平凡但很幸福的一天',
-  ];
-
-  let idCounter = 1;
-  const now = Date.now();
-
-  for (let dayOffset = 0; dayOffset < 365; dayOffset++) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - dayOffset);
-
-    const rand = Math.random();
-    let hasRecord: boolean;
-    if (dayOffset < 30) {
-      hasRecord = rand < 0.75;
-    } else if (dayOffset < 90) {
-      hasRecord = rand < 0.65;
-    } else if (dayOffset < 180) {
-      hasRecord = rand < 0.5;
-    } else {
-      hasRecord = rand < 0.4;
-    }
-
-    if (hasRecord) {
-      const rating = Math.floor(Math.random() * 5) + 1;
-      const dateStr = date.toISOString().split('T')[0];
-      const ts = now - dayOffset * 86400000;
-
-      records.push({
-        id: `mock-${idCounter++}`,
-        date: dateStr,
-        rating,
-        content: contents[Math.floor(Math.random() * contents.length)],
-        tags: [tags[Math.floor(Math.random() * tags.length)]],
-        createdAt: ts,
-        updatedAt: ts,
-      });
-    }
-  }
-
-  return records;
 };
 
 export const generateUUID = (): string => {
