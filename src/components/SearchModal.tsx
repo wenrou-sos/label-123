@@ -3,25 +3,10 @@ import { Search, X, Tag, Calendar, Star } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { cn, formatDateCN } from '../lib/utils';
 import { DiaryRecord } from '../types';
-import { RatingStars } from './RatingStars';
+import { filterRecords, smartTruncate } from '../utils/statsUtils';
+import { useDebounce } from '../hooks/useDebounce';
 
 const TAG_OPTIONS = ['日常', '浪漫', '旅行', '纪念日', '美食', '电影', '散步', '惊喜', '礼物', '吵架'];
-
-const useDebounce = <T,>(value: T, delay: number): T => {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-};
 
 const highlightText = (text: string, keyword: string): React.ReactNode => {
   if (!keyword.trim()) return text;
@@ -31,13 +16,17 @@ const highlightText = (text: string, keyword: string): React.ReactNode => {
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
   let index = lowerText.indexOf(lowerKeyword);
+  let keyCounter = 0;
 
   while (index !== -1) {
     if (index > lastIndex) {
       parts.push(text.slice(lastIndex, index));
     }
     parts.push(
-      <mark key={`hl-${lastIndex}`} className="bg-rose-200/60 text-rose-700 px-0.5 rounded">
+      <mark
+        key={`hl-${keyCounter++}`}
+        className="bg-rose-200/60 text-rose-700 px-0.5 rounded"
+      >
         {text.slice(index, index + keyword.length)}
       </mark>
     );
@@ -50,11 +39,6 @@ const highlightText = (text: string, keyword: string): React.ReactNode => {
   }
 
   return parts.length > 0 ? parts : text;
-};
-
-const truncateText = (text: string, maxLen: number): string => {
-  if (text.length <= maxLen) return text;
-  return text.slice(0, maxLen) + '...';
 };
 
 export const SearchModal: React.FC = () => {
@@ -78,31 +62,10 @@ export const SearchModal: React.FC = () => {
   }, [isOpen]);
 
   const searchResults = useMemo<DiaryRecord[]>(() => {
-    const kw = debouncedKeyword.trim().toLowerCase();
-    const hasKw = kw.length > 0;
-    const hasTag = selectedTags.length > 0;
-
-    if (!hasKw && !hasTag) return [];
-
-    let results = [...records];
-
-    if (hasKw) {
-      results = results.filter((r) => {
-        const contentMatch = r.content.toLowerCase().includes(kw);
-        const tagMatch = r.tags.some((t) => t.toLowerCase().includes(kw));
-        return contentMatch || tagMatch;
-      });
-    }
-
-    if (hasTag) {
-      results = results.filter((r) =>
-        selectedTags.some((tag) => r.tags.includes(tag))
-      );
-    }
-
-    results.sort((a, b) => b.date.localeCompare(a.date));
-
-    return results;
+    return filterRecords(records, {
+      keyword: debouncedKeyword,
+      tags: selectedTags,
+    });
   }, [records, debouncedKeyword, selectedTags]);
 
   const handleTagToggle = (tag: string) => {
@@ -117,6 +80,7 @@ export const SearchModal: React.FC = () => {
   };
 
   const hasAnyFilter = debouncedKeyword.trim().length > 0 || selectedTags.length > 0;
+  const displayKeyword = debouncedKeyword.trim();
 
   return (
     <>
@@ -211,65 +175,70 @@ export const SearchModal: React.FC = () => {
 
           {searchResults.length > 0 ? (
             <div className="space-y-2 px-4 pb-4">
-              {searchResults.map((record) => (
-                <button
-                  key={record.id}
-                  onClick={() => handleResultClick(record)}
-                  className="w-full text-left p-3 rounded-xl bg-white/80 border border-warm-100 hover:border-rose-200 hover:bg-rose-50/50 active:scale-[0.98] transition-all"
-                >
-                  <div className="flex items-start justify-between gap-3 mb-2">
-                    <div className="flex items-center gap-1.5">
-                      <Calendar
-                        size={12}
-                        className="text-rose-400"
-                        strokeWidth={1.8}
-                      />
-                      <span className="text-xs text-warm-500 font-medium">
-                        {formatDateCN(record.date)}
-                      </span>
-                    </div>
-                    {record.rating > 0 && (
-                      <div className="flex items-center gap-1">
-                        <Star
+              {searchResults.map((record) => {
+                const { text: displayText } = smartTruncate(
+                  record.content,
+                  displayKeyword,
+                  100
+                );
+
+                return (
+                  <button
+                    key={record.id}
+                    onClick={() => handleResultClick(record)}
+                    className="w-full text-left p-3 rounded-xl bg-white/80 border border-warm-100 hover:border-rose-200 hover:bg-rose-50/50 active:scale-[0.98] transition-all"
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar
                           size={12}
-                          className="text-amber-400 fill-amber-300"
-                          strokeWidth={1.5}
+                          className="text-rose-400"
+                          strokeWidth={1.8}
                         />
                         <span className="text-xs text-warm-500 font-medium">
-                          {record.rating.toFixed(1)}
+                          {formatDateCN(record.date)}
                         </span>
                       </div>
-                    )}
-                  </div>
-
-                  {record.content && (
-                    <p className="text-sm text-warm-600 leading-relaxed mb-2 line-clamp-2">
-                      {highlightText(
-                        truncateText(record.content, 100),
-                        debouncedKeyword.trim()
+                      {record.rating > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Star
+                            size={12}
+                            className="text-amber-400 fill-amber-300"
+                            strokeWidth={1.5}
+                          />
+                          <span className="text-xs text-warm-500 font-medium">
+                            {record.rating.toFixed(1)}
+                          </span>
+                        </div>
                       )}
-                    </p>
-                  )}
-
-                  {record.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {record.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className={cn(
-                            'px-2 py-0.5 rounded-full text-[10px] font-medium',
-                            selectedTags.includes(tag)
-                              ? 'bg-rose-100 text-rose-600'
-                              : 'bg-warm-50 text-warm-400'
-                          )}
-                        >
-                          #{tag}
-                        </span>
-                      ))}
                     </div>
-                  )}
-                </button>
-              ))}
+
+                    {record.content && (
+                      <p className="text-sm text-warm-600 leading-relaxed mb-2 line-clamp-2">
+                        {highlightText(displayText, displayKeyword)}
+                      </p>
+                    )}
+
+                    {record.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {record.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className={cn(
+                              'px-2 py-0.5 rounded-full text-[10px] font-medium',
+                              selectedTags.includes(tag)
+                                ? 'bg-rose-100 text-rose-600'
+                                : 'bg-warm-50 text-warm-400'
+                            )}
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           ) : hasAnyFilter ? (
             <div className="px-4 py-12 text-center">

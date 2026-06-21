@@ -325,3 +325,108 @@ export const findBestMonth = (
   );
   return { month: sorted[0].month, avgRating: sorted[0].avgRating };
 };
+
+export interface SearchFilterOptions {
+  keyword: string;
+  tags: string[];
+}
+
+export const filterRecords = (
+  records: DiaryRecord[],
+  options: SearchFilterOptions
+): DiaryRecord[] => {
+  const { keyword, tags } = options;
+  const kw = keyword.trim().toLowerCase();
+  const hasKw = kw.length > 0;
+  const hasTag = tags.length > 0;
+
+  if (!hasKw && !hasTag) return [];
+
+  let results = [...records];
+
+  if (hasKw) {
+    results = results.filter((r) => {
+      const contentMatch = r.content.toLowerCase().includes(kw);
+      const tagMatch = r.tags.some((t) => t.toLowerCase().includes(kw));
+      return contentMatch || tagMatch;
+    });
+  }
+
+  if (hasTag) {
+    results = results.filter((r) =>
+      tags.some((tag) => r.tags.includes(tag))
+    );
+  }
+
+  results.sort((a, b) => b.date.localeCompare(a.date));
+
+  return results;
+};
+
+export const findFirstMatchIndex = (
+  text: string,
+  keyword: string
+): number => {
+  if (!keyword.trim()) return -1;
+  return text.toLowerCase().indexOf(keyword.trim().toLowerCase());
+};
+
+export const smartTruncate = (
+  text: string,
+  keyword: string,
+  maxLen: number = 100
+): { text: string; wasTruncated: boolean; hadMatch: boolean } => {
+  if (text.length <= maxLen) {
+    return { text, wasTruncated: false, hadMatch: true };
+  }
+
+  const kw = keyword.trim();
+  const matchIdx = findFirstMatchIndex(text, kw);
+
+  if (matchIdx === -1 || !kw) {
+    return {
+      text: text.slice(0, maxLen) + '...',
+      wasTruncated: true,
+      hadMatch: false,
+    };
+  }
+
+  const kwLen = kw.length;
+  const matchEnd = matchIdx + kwLen;
+  const halfLen = Math.floor((maxLen - kwLen) / 2);
+
+  let start = matchIdx - halfLen;
+  let end = matchEnd + halfLen;
+
+  if (start < 0) {
+    end += -start;
+    start = 0;
+  }
+
+  if (end > text.length) {
+    start -= end - text.length;
+    end = text.length;
+    if (start < 0) start = 0;
+  }
+
+  let result = text.slice(start, end);
+  let hadLeading = start > 0;
+  let hadTrailing = end < text.length;
+
+  if (hadLeading) {
+    result = '...' + result;
+  }
+  if (hadTrailing) {
+    result = result + '...';
+  }
+
+  return {
+    text: result,
+    wasTruncated: hadLeading || hadTrailing,
+    hadMatch: true,
+  };
+};
+
+
+
+
