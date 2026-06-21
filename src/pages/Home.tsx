@@ -8,6 +8,8 @@ import { SpecialDateReminder } from '../components/SpecialDateReminder';
 import { RecordDetailModal } from '../components/RecordDetailModal';
 import { SettingPanel } from '../components/SettingPanel';
 import { SearchModal } from '../components/SearchModal';
+import { Timeline } from '../components/Timeline';
+import { BackToTop } from '../components/BackToTop';
 import { Heart, PenLine, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAppStore } from '../store/useAppStore';
@@ -80,7 +82,9 @@ export const Home: React.FC = () => {
 
         <RatingTrendChart />
 
-        <div className="card animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <Timeline />
+
+        <div className="card animate-slide-up" style={{ animationDelay: '0.2s' }}>
           <div className="text-center py-3">
             <p className="text-xs text-warm-400 flex items-center justify-center gap-1.5">
               <Heart size={12} className="text-rose-400 fill-rose-300" strokeWidth={1.5} />
@@ -103,6 +107,8 @@ export const Home: React.FC = () => {
           <PenLine size={22} strokeWidth={2.2} />
         </button>
       </div>
+
+      <BackToTop />
 
       <RecordDetailModal />
       <SettingPanel />
