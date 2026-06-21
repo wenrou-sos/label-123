@@ -4,31 +4,51 @@ import { useAppStore } from '../store/useAppStore';
 import { useExpectationCheck } from '../hooks/useExpectationCheck';
 import { SpecialDateManager } from './SpecialDateManager';
 import { cn } from '../lib/utils';
-import { ExpectationSettings } from '../types';
+import { ExpectationSettings, SpecialDate } from '../types';
+import { generateUUID } from '../utils/statsUtils';
 
 export const SettingPanel: React.FC = () => {
   const isOpen = useAppStore((s) => s.isSettingPanelOpen);
   const closeSettingPanel = useAppStore((s) => s.closeSettingPanel);
   const setSettings = useAppStore((s) => s.setSettings);
+  const setSpecialDates = useAppStore((s) => s.setSpecialDates);
   const currentSettings = useAppStore((s) => s.settings);
+  const currentSpecialDates = useAppStore((s) => s.specialDates);
   const { actualCount4Weeks, weeklyActualAvg, expectedMin4Weeks, expectedMax4Weeks } =
     useExpectationCheck();
 
   const [localSettings, setLocalSettings] = useState<ExpectationSettings>(currentSettings);
+  const [localSpecialDates, setLocalSpecialDates] = useState<SpecialDate[]>(currentSpecialDates);
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     setLocalSettings(currentSettings);
+    setLocalSpecialDates(currentSpecialDates);
     setHasChanges(false);
-  }, [currentSettings, isOpen]);
+  }, [currentSettings, currentSpecialDates, isOpen]);
 
   useEffect(() => {
-    setHasChanges(
+    const settingsChanged =
       localSettings.minTimesPerWeek !== currentSettings.minTimesPerWeek ||
-        localSettings.maxTimesPerWeek !== currentSettings.maxTimesPerWeek ||
-        localSettings.reminderEnabled !== currentSettings.reminderEnabled
-    );
-  }, [localSettings, currentSettings]);
+      localSettings.maxTimesPerWeek !== currentSettings.maxTimesPerWeek ||
+      localSettings.reminderEnabled !== currentSettings.reminderEnabled;
+
+    const specialDatesChanged =
+      localSpecialDates.length !== currentSpecialDates.length ||
+      localSpecialDates.some((sd, i) => {
+        const orig = currentSpecialDates[i];
+        return (
+          !orig ||
+          sd.id !== orig.id ||
+          sd.date !== orig.date ||
+          sd.name !== orig.name ||
+          sd.emoji !== orig.emoji ||
+          sd.repeatYearly !== orig.repeatYearly
+        );
+      });
+
+    setHasChanges(settingsChanged || specialDatesChanged);
+  }, [localSettings, currentSettings, localSpecialDates, currentSpecialDates]);
 
   const handleMinChange = (val: number) => {
     const newMin = Math.max(1, Math.min(val, localSettings.maxTimesPerWeek));
@@ -40,8 +60,27 @@ export const SettingPanel: React.FC = () => {
     setLocalSettings((s) => ({ ...s, maxTimesPerWeek: newMax }));
   };
 
+  const handleAddSpecialDate = (data: Omit<SpecialDate, 'id'>) => {
+    const newItem: SpecialDate = {
+      ...data,
+      id: generateUUID(),
+    };
+    setLocalSpecialDates((prev) => [...prev, newItem]);
+  };
+
+  const handleUpdateSpecialDate = (id: string, data: Partial<Omit<SpecialDate, 'id'>>) => {
+    setLocalSpecialDates((prev) =>
+      prev.map((sd) => (sd.id === id ? { ...sd, ...data } : sd))
+    );
+  };
+
+  const handleDeleteSpecialDate = (id: string) => {
+    setLocalSpecialDates((prev) => prev.filter((sd) => sd.id !== id));
+  };
+
   const handleSave = () => {
     setSettings(localSettings);
+    setSpecialDates(localSpecialDates);
     closeSettingPanel();
   };
 
@@ -190,7 +229,12 @@ export const SettingPanel: React.FC = () => {
             </div>
           </div>
 
-          <SpecialDateManager />
+          <SpecialDateManager
+            specialDates={localSpecialDates}
+            onAdd={handleAddSpecialDate}
+            onUpdate={handleUpdateSpecialDate}
+            onDelete={handleDeleteSpecialDate}
+          />
 
           <div className="mb-6">
             <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-ivory-50 to-warm-50 border border-warm-100">

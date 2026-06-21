@@ -75,6 +75,10 @@ export const useAppStore = create<AppState>()(
         get().checkAndUpdateReminder();
       },
 
+      setSpecialDates: (specialDates: SpecialDate[]) => {
+        set({ specialDates });
+      },
+
       addSpecialDate: (data) => {
         const newItem: SpecialDate = {
           ...data,

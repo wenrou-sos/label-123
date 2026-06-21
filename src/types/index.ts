@@ -80,6 +80,7 @@ export interface AppState {
   updateRecord: (id: string, data: Partial<Omit<DiaryRecord, 'id' | 'createdAt'>>) => void;
   deleteRecord: (id: string) => void;
   setSettings: (settings: Partial<ExpectationSettings>) => void;
+  setSpecialDates: (specialDates: SpecialDate[]) => void;
   addSpecialDate: (data: Omit<SpecialDate, 'id'>) => void;
   updateSpecialDate: (id: string, data: Partial<Omit<SpecialDate, 'id'>>) => void;
   deleteSpecialDate: (id: string) => void;

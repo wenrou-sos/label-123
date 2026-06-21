@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Plus, Pencil, Trash2, Check, X, Calendar } from 'lucide-react';
-import { useAppStore } from '../store/useAppStore';
 import { cn, formatDateCN } from '../lib/utils';
 import { SpecialDate } from '../types';
+import { todayStr } from '../utils/dateUtils';
 
 const PRESET_EMOJIS = ['💖', '🎂', '🎉', '💍', '🌟', '💝', '🌷', '🍀'];
 
@@ -14,25 +14,32 @@ interface EditorState {
   repeatYearly: boolean;
 }
 
-const emptyEditor: EditorState = {
+const createEmptyEditor = (): EditorState => ({
   id: null,
-  date: new Date().toISOString().split('T')[0],
+  date: todayStr(),
   name: '',
   emoji: '💖',
   repeatYearly: true,
-};
+});
 
-export const SpecialDateManager: React.FC = () => {
-  const specialDates = useAppStore((s) => s.specialDates);
-  const addSpecialDate = useAppStore((s) => s.addSpecialDate);
-  const updateSpecialDate = useAppStore((s) => s.updateSpecialDate);
-  const deleteSpecialDate = useAppStore((s) => s.deleteSpecialDate);
+interface SpecialDateManagerProps {
+  specialDates: SpecialDate[];
+  onAdd: (data: Omit<SpecialDate, 'id'>) => void;
+  onUpdate: (id: string, data: Partial<Omit<SpecialDate, 'id'>>) => void;
+  onDelete: (id: string) => void;
+}
 
+export const SpecialDateManager: React.FC<SpecialDateManagerProps> = ({
+  specialDates,
+  onAdd,
+  onUpdate,
+  onDelete,
+}) => {
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [showAdder, setShowAdder] = useState(false);
 
   const startAdd = () => {
-    setEditor({ ...emptyEditor });
+    setEditor(createEmptyEditor());
     setShowAdder(true);
   };
 
@@ -56,14 +63,14 @@ export const SpecialDateManager: React.FC = () => {
     if (!editor || !editor.name.trim() || !editor.date) return;
 
     if (editor.id) {
-      updateSpecialDate(editor.id, {
+      onUpdate(editor.id, {
         date: editor.date,
         name: editor.name.trim(),
         emoji: editor.emoji,
         repeatYearly: editor.repeatYearly,
       });
     } else {
-      addSpecialDate({
+      onAdd({
         date: editor.date,
         name: editor.name.trim(),
         emoji: editor.emoji,
@@ -147,7 +154,7 @@ export const SpecialDateManager: React.FC = () => {
                       <Pencil size={14} strokeWidth={2} />
                     </button>
                     <button
-                      onClick={() => deleteSpecialDate(sd.id)}
+                      onClick={() => onDelete(sd.id)}
                       className="p-1.5 rounded-lg text-warm-400 hover:bg-red-50 hover:text-red-500 active:scale-90 transition-all"
                       aria-label="删除"
                     >
