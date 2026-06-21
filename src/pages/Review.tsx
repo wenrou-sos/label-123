@@ -1,6 +1,7 @@
 import React from 'react';
 import { PageHeader } from '../components/PageHeader';
 import { YearlyStatsCard } from '../components/YearlyStatsCard';
+import { RatingTrendChart } from '../components/RatingTrendChart';
 import { SettingPanel } from '../components/SettingPanel';
 import { RecordDetailModal } from '../components/RecordDetailModal';
 import { Sparkles, Heart } from 'lucide-react';
@@ -78,6 +79,8 @@ export const Review: React.FC = () => {
             </div>
           </div>
         </div>
+
+        <RatingTrendChart />
 
         <YearlyStatsCard />
 
