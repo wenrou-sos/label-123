@@ -2,6 +2,7 @@ import React from 'react';
 import { PageHeader } from '../components/PageHeader';
 import { HeatmapCalendar } from '../components/HeatmapCalendar/HeatmapCalendar';
 import { MonthlyStatsCard } from '../components/MonthlyStatsCard';
+import { RatingTrendChart } from '../components/RatingTrendChart';
 import { ReminderBar } from '../components/ReminderBar';
 import { SpecialDateReminder } from '../components/SpecialDateReminder';
 import { RecordDetailModal } from '../components/RecordDetailModal';
@@ -75,6 +76,8 @@ export const Home: React.FC = () => {
         <HeatmapCalendar />
 
         <MonthlyStatsCard />
+
+        <RatingTrendChart />
 
         <div className="card animate-slide-up" style={{ animationDelay: '0.1s' }}>
           <div className="text-center py-3">
