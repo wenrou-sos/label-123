@@ -46,9 +46,10 @@ export const getRecordsInYear = (records: DiaryRecord[], year: number): DiaryRec
 };
 
 export const calcAvgRating = (records: DiaryRecord[]): number => {
-  if (records.length === 0) return 0;
-  const sum = records.reduce((acc, r) => acc + r.rating, 0);
-  return Number((sum / records.length).toFixed(1));
+  const rated = records.filter((r) => r.rating > 0);
+  if (rated.length === 0) return 0;
+  const sum = rated.reduce((acc, r) => acc + r.rating, 0);
+  return Number((sum / rated.length).toFixed(1));
 };
 
 export const calcMaxStreak = (records: DiaryRecord[], year: number, month: number): number => {
@@ -141,6 +142,15 @@ export const calcYearlyStats = (records: DiaryRecord[], year: number): YearlySta
 
   const avgMonthlyCount = Number((totalCount / 12).toFixed(1));
 
+  const ratedYearRecords = yearRecords.filter((r) => r.rating > 0);
+  const avgRating =
+    ratedYearRecords.length > 0
+      ? Number(
+          (ratedYearRecords.reduce((acc, r) => acc + r.rating, 0) /
+            ratedYearRecords.length).toFixed(1)
+        )
+      : 0;
+
   const lastYearRecords = getRecordsInYear(records, year - 1);
   const lastYearCount = lastYearRecords.length;
   const changePercent = calcChangePercent(totalCount, lastYearCount);
@@ -149,6 +159,7 @@ export const calcYearlyStats = (records: DiaryRecord[], year: number): YearlySta
     year,
     totalCount,
     avgMonthlyCount,
+    avgRating,
     highestMonth: { month: highestMonth.month, count: highestMonth.count },
     lowestMonth: { month: lowestMonth.month, count: lowestMonth.count },
     compareToLastYear: {

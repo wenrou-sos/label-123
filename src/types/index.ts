@@ -31,6 +31,7 @@ export interface YearlyStats {
   year: number;
   totalCount: number;
   avgMonthlyCount: number;
+  avgRating: number;
   highestMonth: { month: number; count: number };
   lowestMonth: { month: number; count: number };
   compareToLastYear: {

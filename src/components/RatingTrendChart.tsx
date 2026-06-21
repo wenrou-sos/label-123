@@ -53,23 +53,21 @@ export const RatingTrendChart: React.FC = () => {
   const stats = useYearlyStats();
   const [hoveredMonth, setHoveredMonth] = useState<number | null>(null);
 
-  const { points, linePath, areaPath, validSegments, hasAnyData, avgLine } = useMemo(() => {
+  const { points, validSegments, hasAnyData, avgLine } = useMemo(() => {
     const breakdown = stats.monthlyBreakdown;
 
     const allPoints: Point[] = breakdown.map((m) => {
-      const hasData = m.count > 0;
-      const rating = hasData ? Math.max(MIN_RATING, m.avgRating || MIN_RATING) : 0;
+      const hasData = m.avgRating > 0;
       return {
         month: m.month,
         count: m.count,
         avgRating: m.avgRating,
         hasData,
         x: monthToX(m.month),
-        y: hasData ? ratingToY(rating) : -999,
+        y: hasData ? ratingToY(m.avgRating) : -999,
       };
     });
 
-    const validPts = allPoints.filter((p) => p.hasData);
     const segments: { points: Point[]; pathD: string; areaD: string }[] = [];
     let buf: Point[] = [];
     const flush = () => {
@@ -90,20 +88,13 @@ export const RatingTrendChart: React.FC = () => {
     }
     flush();
 
-    const avg =
-      validPts.length > 0
-        ? validPts.reduce((s, p) => s + p.avgRating, 0) / validPts.length
-        : 0;
-
     return {
       points: allPoints,
-      linePath: '',
-      areaPath: '',
       validSegments: segments,
-      hasAnyData: validPts.length > 0,
-      avgLine: avg,
+      hasAnyData: allPoints.some((p) => p.hasData),
+      avgLine: stats.avgRating,
     };
-  }, [stats.monthlyBreakdown]);
+  }, [stats.monthlyBreakdown, stats.avgRating]);
 
   const yTicks = [1, 2, 3, 4, 5];
   const hoveredPoint = hoveredMonth ? points.find((p) => p.month === hoveredMonth) : null;
@@ -446,36 +437,43 @@ export const RatingTrendChart: React.FC = () => {
           </p>
         </div>
         <div className="p-3 rounded-xl bg-gradient-to-br from-rose-50 to-peach-300/20 border border-rose-100">
-          <p className="text-rose-600 font-medium">💖 稳定期</p>
+          <p className="text-rose-600 font-medium">💖 平稳期</p>
           <p className="text-rose-700/70 mt-0.5 leading-snug">
             {(() => {
-              const dataPts = points.filter((p) => p.hasData);
-              if (dataPts.length < 2) return '数据不足';
-              let bestRun: { start: number; end: number; avg: number } | null = null;
+              const segments: Point[][] = [];
               let run: Point[] = [];
-              const pushRun = () => {
-                if (run.length >= 2) {
-                  const avg = run.reduce((s, p) => s + p.avgRating, 0) / run.length;
-                  if (
-                    !bestRun ||
-                    avg * Math.log(run.length + 1) >
-                      bestRun.avg * Math.log(bestRun.end - bestRun.start + 2)
-                  ) {
-                    bestRun = { start: run[0].month, end: run[run.length - 1].month, avg };
-                  }
-                }
-                run = [];
-              };
               for (const p of points) {
                 if (p.hasData) run.push(p);
-                else pushRun();
+                else {
+                  if (run.length >= 2) segments.push(run);
+                  run = [];
+                }
               }
-              pushRun();
-              return bestRun
-                ? bestRun.start === bestRun.end
-                  ? `${bestRun.start}月（${bestRun.avg.toFixed(1)}★）`
-                  : `${bestRun.start}-${bestRun.end}月`
-                : '暂无连续';
+              if (run.length >= 2) segments.push(run);
+              if (segments.length === 0) return '数据不足';
+
+              const stddev = (vals: number[]) => {
+                if (vals.length < 2) return 0;
+                const mean = vals.reduce((s, v) => s + v, 0) / vals.length;
+                return Math.sqrt(
+                  vals.reduce((s, v) => s + (v - mean) ** 2, 0) / vals.length
+                );
+              };
+
+              let best = segments[0];
+              let bestStd = stddev(best.map((p) => p.avgRating));
+              for (const seg of segments.slice(1)) {
+                const std = stddev(seg.map((p) => p.avgRating));
+                if (std < bestStd || (std === bestStd && seg.length > best.length)) {
+                  best = seg;
+                  bestStd = std;
+                }
+              }
+
+              const startM = best[0].month;
+              const endM = best[best.length - 1].month;
+              const range = startM === endM ? `${startM}月` : `${startM}-${endM}月`;
+              return `${range}（波动±${bestStd.toFixed(1)}★）`;
             })()}
           </p>
         </div>
