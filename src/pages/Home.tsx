@@ -7,6 +7,7 @@ import { ReminderBar } from '../components/ReminderBar';
 import { SpecialDateReminder } from '../components/SpecialDateReminder';
 import { RecordDetailModal } from '../components/RecordDetailModal';
 import { SettingPanel } from '../components/SettingPanel';
+import { SearchModal } from '../components/SearchModal';
 import { Heart, PenLine, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAppStore } from '../store/useAppStore';
@@ -105,6 +106,7 @@ export const Home: React.FC = () => {
 
       <RecordDetailModal />
       <SettingPanel />
+      <SearchModal />
     </div>
   );
 };

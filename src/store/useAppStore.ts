@@ -22,6 +22,7 @@ export const useAppStore = create<AppState>()(
       selectedDate: null,
       isDetailModalOpen: false,
       isSettingPanelOpen: false,
+      isSearchModalOpen: false,
       showReminder: false,
       reminderDismissed: false,
       specialDateDismissed: {},
@@ -120,6 +121,14 @@ export const useAppStore = create<AppState>()(
 
       closeSettingPanel: () => {
         set({ isSettingPanelOpen: false });
+      },
+
+      openSearchModal: () => {
+        set({ isSearchModalOpen: true });
+      },
+
+      closeSearchModal: () => {
+        set({ isSearchModalOpen: false });
       },
 
       dismissReminder: () => {

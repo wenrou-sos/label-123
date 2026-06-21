@@ -72,6 +72,7 @@ export interface AppState {
   selectedDate: string | null;
   isDetailModalOpen: boolean;
   isSettingPanelOpen: boolean;
+  isSearchModalOpen: boolean;
   showReminder: boolean;
   reminderDismissed: boolean;
   specialDateDismissed: Record<string, string>;
@@ -89,6 +90,8 @@ export interface AppState {
   closeDetailModal: () => void;
   openSettingPanel: () => void;
   closeSettingPanel: () => void;
+  openSearchModal: () => void;
+  closeSearchModal: () => void;
   dismissReminder: () => void;
   dismissSpecialDateReminder: (id: string) => void;
   checkAndUpdateReminder: () => void;

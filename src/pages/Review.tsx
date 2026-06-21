@@ -4,6 +4,7 @@ import { YearlyStatsCard } from '../components/YearlyStatsCard';
 import { RatingTrendChart } from '../components/RatingTrendChart';
 import { SettingPanel } from '../components/SettingPanel';
 import { RecordDetailModal } from '../components/RecordDetailModal';
+import { SearchModal } from '../components/SearchModal';
 import { Sparkles, Heart } from 'lucide-react';
 import { useYearlyStats } from '../hooks/useYearlyStats';
 import { cn } from '../lib/utils';
@@ -105,6 +106,7 @@ export const Review: React.FC = () => {
 
       <RecordDetailModal />
       <SettingPanel />
+      <SearchModal />
     </div>
   );
 };

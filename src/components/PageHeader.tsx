@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronLeft, BarChart3, Home, Settings } from 'lucide-react';
+import { ChevronLeft, BarChart3, Home, Settings, Search } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { cn } from '../lib/utils';
 
@@ -9,6 +9,7 @@ interface PageHeaderProps {
   showBack?: boolean;
   showHome?: boolean;
   showReview?: boolean;
+  showSearch?: boolean;
   showSettings?: boolean;
 }
 
@@ -17,10 +18,12 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   showBack = false,
   showHome = true,
   showReview = true,
+  showSearch = true,
   showSettings = true,
 }) => {
   const location = useLocation();
   const openSettingPanel = useAppStore((s) => s.openSettingPanel);
+  const openSearchModal = useAppStore((s) => s.openSearchModal);
   const isReviewPage = location.pathname === '/review';
 
   return (
@@ -42,7 +45,16 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           {title}
         </h1>
 
-        <div className="flex items-center gap-1 w-20 justify-end">
+        <div className="flex items-center gap-0.5 w-24 justify-end">
+          {showSearch && (
+            <button
+              onClick={openSearchModal}
+              className="p-2 rounded-full text-warm-500 hover:bg-rose-50 active:scale-95 transition-all"
+              aria-label="搜索"
+            >
+              <Search size={20} strokeWidth={1.8} />
+            </button>
+          )}
           {showHome && isReviewPage && (
             <Link
               to="/"
