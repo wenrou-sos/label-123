@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AppState, DiaryRecord, ExpectationSettings } from '../types';
+import { AppState, DiaryRecord, ExpectationSettings, SpecialDate } from '../types';
 import {
   generateUUID,
   checkExpectationDeviation,
@@ -18,11 +18,13 @@ export const useAppStore = create<AppState>()(
     (set, get) => ({
       records: [],
       settings: DEFAULT_SETTINGS,
+      specialDates: [],
       selectedDate: null,
       isDetailModalOpen: false,
       isSettingPanelOpen: false,
       showReminder: false,
       reminderDismissed: false,
+      specialDateDismissed: {},
 
       setRecords: (records: DiaryRecord[]) => {
         set({ records });
@@ -73,6 +75,28 @@ export const useAppStore = create<AppState>()(
         get().checkAndUpdateReminder();
       },
 
+      addSpecialDate: (data) => {
+        const newItem: SpecialDate = {
+          ...data,
+          id: generateUUID(),
+        };
+        set((state) => ({ specialDates: [...state.specialDates, newItem] }));
+      },
+
+      updateSpecialDate: (id, data) => {
+        set((state) => ({
+          specialDates: state.specialDates.map((s) =>
+            s.id === id ? { ...s, ...data } : s
+          ),
+        }));
+      },
+
+      deleteSpecialDate: (id) => {
+        set((state) => ({
+          specialDates: state.specialDates.filter((s) => s.id !== id),
+        }));
+      },
+
       selectDate: (date) => {
         set({ selectedDate: date });
       },
@@ -98,6 +122,15 @@ export const useAppStore = create<AppState>()(
         set({ showReminder: false, reminderDismissed: true });
       },
 
+      dismissSpecialDateReminder: (id) => {
+        set((state) => ({
+          specialDateDismissed: {
+            ...state.specialDateDismissed,
+            [id]: todayStr(),
+          },
+        }));
+      },
+
       checkAndUpdateReminder: () => {
         const { records, settings, reminderDismissed } = get();
         const isDeviating = checkExpectationDeviation(records, settings);
@@ -110,21 +143,36 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'private-diary-storage',
-      version: 2,
+      version: 3,
       partialize: (state) => ({
         records: state.records,
         settings: state.settings,
+        specialDates: state.specialDates,
+        specialDateDismissed: state.specialDateDismissed,
       }),
-      migrate: (persistedState: unknown) => {
+      migrate: (persistedState: unknown, version: number) => {
         const state = (persistedState ?? {}) as {
           records?: DiaryRecord[];
           settings?: ExpectationSettings;
+          specialDates?: SpecialDate[];
+          specialDateDismissed?: Record<string, string>;
         };
         const records = state.records ?? [];
-        return {
+
+        let next = {
           ...state,
           records: records.filter((r) => !r.id?.startsWith('mock-')),
         };
+
+        if (version < 3) {
+          next = {
+            ...next,
+            specialDates: [],
+            specialDateDismissed: {},
+          };
+        }
+
+        return next;
       },
       onRehydrateStorage: () => (state) => {
         if (state) {

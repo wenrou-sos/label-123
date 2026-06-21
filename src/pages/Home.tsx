@@ -3,6 +3,7 @@ import { PageHeader } from '../components/PageHeader';
 import { HeatmapCalendar } from '../components/HeatmapCalendar/HeatmapCalendar';
 import { MonthlyStatsCard } from '../components/MonthlyStatsCard';
 import { ReminderBar } from '../components/ReminderBar';
+import { SpecialDateReminder } from '../components/SpecialDateReminder';
 import { RecordDetailModal } from '../components/RecordDetailModal';
 import { SettingPanel } from '../components/SettingPanel';
 import { Heart, PenLine, BarChart3 } from 'lucide-react';
@@ -69,6 +70,7 @@ export const Home: React.FC = () => {
         </div>
 
         <ReminderBar />
+        <SpecialDateReminder />
 
         <HeatmapCalendar />
 

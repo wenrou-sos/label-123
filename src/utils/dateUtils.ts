@@ -19,6 +19,7 @@ import {
   getYear,
 } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { SpecialDate } from '../types';
 
 export const DATE_FORMAT = 'yyyy-MM-dd';
 
@@ -134,4 +135,23 @@ export const prevMonth = (year: number, month: number): { year: number; month: n
 export const nextMonthFunc = (year: number, month: number): { year: number; month: number } => {
   const d = addMonths(new Date(year, month - 1, 1), 1);
   return { year: getYear(d), month: getMonth(d) + 1 };
+};
+
+const getMonthDayKey = (date: string | Date): string => {
+  const d = typeof date === 'string' ? parseISO(date) : date;
+  return format(d, 'MM-dd');
+};
+
+export const isSpecialDate = (date: string, specialDate: SpecialDate): boolean => {
+  if (specialDate.repeatYearly) {
+    return getMonthDayKey(date) === getMonthDayKey(specialDate.date);
+  }
+  return date === specialDate.date;
+};
+
+export const getSpecialDatesForDate = (
+  date: string,
+  specialDates: SpecialDate[]
+): SpecialDate[] => {
+  return specialDates.filter((sd) => isSpecialDate(date, sd));
 };

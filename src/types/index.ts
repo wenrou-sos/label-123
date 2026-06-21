@@ -57,24 +57,38 @@ export interface MonthHeatmapData {
   cells: (HeatmapCellData | null)[];
 }
 
+export interface SpecialDate {
+  id: string;
+  date: string;
+  name: string;
+  emoji: string;
+  repeatYearly: boolean;
+}
+
 export interface AppState {
   records: DiaryRecord[];
   settings: ExpectationSettings;
+  specialDates: SpecialDate[];
   selectedDate: string | null;
   isDetailModalOpen: boolean;
   isSettingPanelOpen: boolean;
   showReminder: boolean;
   reminderDismissed: boolean;
+  specialDateDismissed: Record<string, string>;
   setRecords: (records: DiaryRecord[]) => void;
   addRecord: (record: Omit<DiaryRecord, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateRecord: (id: string, data: Partial<Omit<DiaryRecord, 'id' | 'createdAt'>>) => void;
   deleteRecord: (id: string) => void;
   setSettings: (settings: Partial<ExpectationSettings>) => void;
+  addSpecialDate: (data: Omit<SpecialDate, 'id'>) => void;
+  updateSpecialDate: (id: string, data: Partial<Omit<SpecialDate, 'id'>>) => void;
+  deleteSpecialDate: (id: string) => void;
   selectDate: (date: string | null) => void;
   openDetailModal: (date?: string) => void;
   closeDetailModal: () => void;
   openSettingPanel: () => void;
   closeSettingPanel: () => void;
   dismissReminder: () => void;
+  dismissSpecialDateReminder: (id: string) => void;
   checkAndUpdateReminder: () => void;
 }

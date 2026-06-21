@@ -1,8 +1,10 @@
 import React from 'react';
+import { Heart } from 'lucide-react';
 import { HeatmapCellData } from '../../types';
 import { useAppStore } from '../../store/useAppStore';
 import { cn, formatDateCN } from '../../lib/utils';
 import { todayStr } from '../../utils/dateUtils';
+import { getSpecialDatesForDate } from '../../utils/dateUtils';
 
 interface HeatmapCellProps {
   cellData: HeatmapCellData;
@@ -24,9 +26,18 @@ const sizeClasses = {
   lg: 'w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-lg',
 };
 
+const iconSizeMap = {
+  sm: 9,
+  md: 11,
+  lg: 13,
+};
+
 export const HeatmapCell: React.FC<HeatmapCellProps> = ({ cellData, size = 'md' }) => {
   const openDetailModal = useAppStore((s) => s.openDetailModal);
+  const specialDates = useAppStore((s) => s.specialDates);
   const isToday = cellData.date === todayStr();
+  const sdList = getSpecialDatesForDate(cellData.date, specialDates);
+  const isSpecial = sdList.length > 0;
 
   const [showTooltip, setShowTooltip] = React.useState(false);
   const tooltipRef = React.useRef<HTMLDivElement>(null);
@@ -47,15 +58,26 @@ export const HeatmapCell: React.FC<HeatmapCellProps> = ({ cellData, size = 'md' 
       <button
         onClick={handleClick}
         className={cn(
-          'heatmap-cell',
+          'heatmap-cell relative overflow-visible',
           sizeClasses[size],
           bgClass,
           level === 0 && !cellData.hasRecord && 'heatmap-cell-empty',
-          isToday && 'ring-2 ring-rose-500 ring-offset-1 ring-offset-ivory-100'
+          isToday && 'ring-2 ring-rose-500 ring-offset-1 ring-offset-ivory-100',
+          isSpecial && 'ring-2 ring-pink-400 ring-offset-1 ring-offset-ivory-100'
         )}
         style={{ animationDelay: `${Math.random() * 0.5}s` }}
-        aria-label={`${formatDateCN(cellData.date)}${cellData.hasRecord ? `，评分${cellData.rating}星` : '，暂无记录'}`}
+        aria-label={`${formatDateCN(cellData.date)}${cellData.hasRecord ? `，评分${cellData.rating}星` : '，暂无记录'}${isSpecial ? `，${sdList.map((s) => s.name).join('、')}` : ''}`}
       />
+
+      {isSpecial && (
+        <div className="absolute -top-1.5 -right-1.5 pointer-events-none animate-pulse">
+          <Heart
+            size={iconSizeMap[size]}
+            className="text-pink-500 fill-pink-400 drop-shadow-sm"
+            strokeWidth={2}
+          />
+        </div>
+      )}
 
       {showTooltip && (
         <div
@@ -64,6 +86,12 @@ export const HeatmapCell: React.FC<HeatmapCellProps> = ({ cellData, size = 'md' 
         >
           <div className="whitespace-nowrap bg-warm-700 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg">
             <p className="font-medium">{formatDateCN(cellData.date)}</p>
+            {isSpecial &&
+              sdList.map((sd) => (
+                <p key={sd.id} className="text-pink-300 mt-0.5">
+                  {sd.emoji} {sd.name}
+                </p>
+              ))}
             {cellData.hasRecord ? (
               <p className="text-peach-300 mt-0.5">{cellData.rating} 星记录</p>
             ) : (

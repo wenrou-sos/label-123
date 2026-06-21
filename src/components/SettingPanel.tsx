@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Target, Bell, BellOff, CheckCircle2, Heart } from 'lucide-react';
+import { X, Target, Bell, BellOff, CheckCircle2, Heart, Calendar } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { useExpectationCheck } from '../hooks/useExpectationCheck';
+import { SpecialDateManager } from './SpecialDateManager';
 import { cn } from '../lib/utils';
 import { ExpectationSettings } from '../types';
 
@@ -188,6 +189,8 @@ export const SettingPanel: React.FC = () => {
               </div>
             </div>
           </div>
+
+          <SpecialDateManager />
 
           <div className="mb-6">
             <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-ivory-50 to-warm-50 border border-warm-100">
