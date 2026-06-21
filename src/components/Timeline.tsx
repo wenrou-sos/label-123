@@ -9,18 +9,29 @@ import { cn } from '../lib/utils';
 interface TimelineItemProps {
   record: DiaryRecord;
   index: number;
+  isFirst: boolean;
+  isLast: boolean;
   onClick: () => void;
 }
 
-const TimelineItem: React.FC<TimelineItemProps> = ({ record, index, onClick }) => {
-  const isLast = index === 0;
-
+const TimelineItem: React.FC<TimelineItemProps> = ({
+  record,
+  index,
+  isFirst,
+  isLast,
+  onClick,
+}) => {
   return (
-    <div className="relative pl-8 pb-8 last:pb-0">
-      {!isLast && (
-        <div className="absolute left-[11px] top-8 bottom-0 w-0.5 bg-gradient-to-b from-rose-200 to-rose-100" />
+    <div className={cn('relative pl-8', !isLast && 'pb-8')}>
+      {!isFirst && (
+        <div className="absolute left-[11px] top-0 w-0.5 h-6 bg-rose-200" />
       )}
-      <div className="absolute left-0 top-1.5 w-6 h-6 rounded-full bg-gradient-to-br from-rose-400 to-rose-500 flex items-center justify-center shadow-soft">
+
+      {!isLast && (
+        <div className="absolute left-[11px] top-6 bottom-0 w-0.5 bg-gradient-to-b from-rose-200 to-rose-100" />
+      )}
+
+      <div className="absolute left-0 top-3 w-6 h-6 rounded-full bg-gradient-to-br from-rose-400 to-rose-500 flex items-center justify-center shadow-soft z-10">
         <div className="w-2 h-2 rounded-full bg-white" />
       </div>
 
@@ -100,12 +111,14 @@ export const Timeline: React.FC = () => {
         </span>
       </div>
 
-      <div className="relative">
+      <div>
         {sortedRecords.map((record, index) => (
           <TimelineItem
             key={record.id}
             record={record}
             index={index}
+            isFirst={index === 0}
+            isLast={index === sortedRecords.length - 1}
             onClick={() => openDetailModal(record.date)}
           />
         ))}
