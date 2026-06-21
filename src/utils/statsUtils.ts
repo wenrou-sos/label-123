@@ -209,3 +209,119 @@ export const generateUUID = (): string => {
     return v.toString(16);
   });
 };
+
+export interface MonthlyRatingPoint {
+  month: number;
+  avgRating: number;
+  hasData: boolean;
+}
+
+export interface StablePeriodResult {
+  startMonth: number;
+  endMonth: number;
+  stabilityScore: number;
+  monthDiffAvg: number;
+  range: number;
+  stddev: number;
+  length: number;
+}
+
+const MIN_STABLE_LENGTH = 3;
+const STABILITY_THRESHOLD = 0.8;
+const SCORE_TIE_EPSILON = 0.1;
+
+const calcStddev = (vals: number[]): number => {
+  if (vals.length < 2) return 0;
+  const mean = vals.reduce((s, v) => s + v, 0) / vals.length;
+  return Math.sqrt(vals.reduce((s, v) => s + (v - mean) ** 2, 0) / vals.length);
+};
+
+const calcMonthDiffAvg = (vals: number[]): number => {
+  if (vals.length < 2) return 0;
+  let sum = 0;
+  for (let i = 1; i < vals.length; i++) {
+    sum += Math.abs(vals[i] - vals[i - 1]);
+  }
+  return sum / (vals.length - 1);
+};
+
+const calcStabilityScore = (
+  monthDiffAvg: number,
+  range: number,
+  stddev: number
+): number => {
+  return monthDiffAvg * 0.5 + range * 0.3 + stddev * 0.2;
+};
+
+export const findStablePeriod = (
+  points: MonthlyRatingPoint[]
+): StablePeriodResult | null => {
+  const valid = points.filter((p) => p.hasData);
+  if (valid.length < MIN_STABLE_LENGTH) return null;
+
+  const candidates: StablePeriodResult[] = [];
+
+  const collectWindows = (seq: MonthlyRatingPoint[]) => {
+    const n = seq.length;
+    for (let len = MIN_STABLE_LENGTH; len <= n; len++) {
+      for (let start = 0; start + len <= n; start++) {
+        const window = seq.slice(start, start + len);
+        const ratings = window.map((p) => p.avgRating);
+        const monthDiffAvg = calcMonthDiffAvg(ratings);
+        const range = Math.max(...ratings) - Math.min(...ratings);
+        const stddev = calcStddev(ratings);
+        const score = calcStabilityScore(monthDiffAvg, range, stddev);
+        candidates.push({
+          startMonth: window[0].month,
+          endMonth: window[window.length - 1].month,
+          stabilityScore: score,
+          monthDiffAvg,
+          range,
+          stddev,
+          length: len,
+        });
+      }
+    }
+  };
+
+  let run: MonthlyRatingPoint[] = [];
+  for (const p of points) {
+    if (p.hasData) {
+      run.push(p);
+    } else {
+      if (run.length >= MIN_STABLE_LENGTH) collectWindows(run);
+      run = [];
+    }
+  }
+  if (run.length >= MIN_STABLE_LENGTH) collectWindows(run);
+
+  if (candidates.length === 0) return null;
+
+  candidates.sort((a, b) => {
+    const scoreDiff = a.stabilityScore - b.stabilityScore;
+    if (Math.abs(scoreDiff) > SCORE_TIE_EPSILON) {
+      return scoreDiff;
+    }
+    if (a.length !== b.length) {
+      return b.length - a.length;
+    }
+    return scoreDiff;
+  });
+
+  const best = candidates[0];
+  if (best.stabilityScore >= STABILITY_THRESHOLD) return null;
+
+  return best;
+};
+
+export const findBestMonth = (
+  points: MonthlyRatingPoint[],
+  mode: 'best' | 'worst'
+): { month: number; avgRating: number } | null => {
+  const valid = points.filter((p) => p.hasData);
+  if (valid.length === 0) return null;
+  const sorted = [...valid].sort((a, b) =>
+    mode === 'best' ? b.avgRating - a.avgRating : a.avgRating - b.avgRating
+  );
+  return { month: sorted[0].month, avgRating: sorted[0].avgRating };
+};

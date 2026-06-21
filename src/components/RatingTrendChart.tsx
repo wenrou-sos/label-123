@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useYearlyStats } from '../hooks/useYearlyStats';
 import { TrendingUp } from 'lucide-react';
 import { cn, formatMonthShort } from '../lib/utils';
+import { findStablePeriod, findBestMonth } from '../utils/statsUtils';
 
 interface Point {
   month: number;
@@ -414,12 +415,8 @@ export const RatingTrendChart: React.FC = () => {
           <p className="text-emerald-600 font-medium">🟢 心情高峰</p>
           <p className="text-emerald-700/70 mt-0.5 leading-snug">
             {(() => {
-              const best = points
-                .filter((p) => p.hasData)
-                .sort((a, b) => b.avgRating - a.avgRating)[0];
-              return best
-                ? `${best.month}月（${best.avgRating.toFixed(1)}★）`
-                : '暂无';
+              const best = findBestMonth(points, 'best');
+              return best ? `${best.month}月（${best.avgRating.toFixed(1)}★）` : '暂无';
             })()}
           </p>
         </div>
@@ -427,12 +424,8 @@ export const RatingTrendChart: React.FC = () => {
           <p className="text-amber-700 font-medium">🟡 低谷期</p>
           <p className="text-amber-700/70 mt-0.5 leading-snug">
             {(() => {
-              const low = points
-                .filter((p) => p.hasData)
-                .sort((a, b) => a.avgRating - b.avgRating)[0];
-              return low
-                ? `${low.month}月（${low.avgRating.toFixed(1)}★）`
-                : '暂无';
+              const low = findBestMonth(points, 'worst');
+              return low ? `${low.month}月（${low.avgRating.toFixed(1)}★）` : '暂无';
             })()}
           </p>
         </div>
@@ -440,40 +433,11 @@ export const RatingTrendChart: React.FC = () => {
           <p className="text-rose-600 font-medium">💖 平稳期</p>
           <p className="text-rose-700/70 mt-0.5 leading-snug">
             {(() => {
-              const segments: Point[][] = [];
-              let run: Point[] = [];
-              for (const p of points) {
-                if (p.hasData) run.push(p);
-                else {
-                  if (run.length >= 2) segments.push(run);
-                  run = [];
-                }
-              }
-              if (run.length >= 2) segments.push(run);
-              if (segments.length === 0) return '数据不足';
-
-              const stddev = (vals: number[]) => {
-                if (vals.length < 2) return 0;
-                const mean = vals.reduce((s, v) => s + v, 0) / vals.length;
-                return Math.sqrt(
-                  vals.reduce((s, v) => s + (v - mean) ** 2, 0) / vals.length
-                );
-              };
-
-              let best = segments[0];
-              let bestStd = stddev(best.map((p) => p.avgRating));
-              for (const seg of segments.slice(1)) {
-                const std = stddev(seg.map((p) => p.avgRating));
-                if (std < bestStd || (std === bestStd && seg.length > best.length)) {
-                  best = seg;
-                  bestStd = std;
-                }
-              }
-
-              const startM = best[0].month;
-              const endM = best[best.length - 1].month;
-              const range = startM === endM ? `${startM}月` : `${startM}-${endM}月`;
-              return `${range}（波动±${bestStd.toFixed(1)}★）`;
+              const stable = findStablePeriod(points);
+              if (!stable) return hasAnyData ? '暂无明显平稳期' : '数据不足';
+              const { startMonth, endMonth, stabilityScore } = stable;
+              const range = startMonth === endMonth ? `${startMonth}月` : `${startMonth}-${endMonth}月`;
+              return `${range}（波动±${stabilityScore.toFixed(1)}★）`;
             })()}
           </p>
         </div>
